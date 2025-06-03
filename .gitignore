@@ -1,0 +1,8 @@
+# Files
+*.json
+*.env
+
+# Folders
+/aux
+/__pycache__
+/venv
