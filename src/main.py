@@ -3,14 +3,6 @@ import tkinter as tk
 from tkinter import messagebox
 from dotenv import load_dotenv
 
-"""
-if os.path.exists("./__pycache__"):
-    os.remove("./__pycache__")
-    print("__pycache__ eliminado con exito!")
-else:
-    print("__pycache__ no existe aun!")
-"""
-
 def quit():
     print("[!] Salindo...")
     #messagebox.showinfo(title="Info",message="Saliendo del programa.")
