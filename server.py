@@ -3,6 +3,22 @@ from flask import Flask,request,jsonify
 import mysql.connector
 from mysql.connector import IntegrityError,Error
 import os
+from datetime import datetime
+
+if os.path.exists("logs"):
+    print("existe")
+else:
+    os.mkdir("logs")
+
+def crearlog(mensaje):
+
+    fechahoralog = datetime.now()
+    fechahoralogformat = fechahoralog.strftime("%H:%M:%S_%d/%m/%y")
+    fechalog = fechahoralog.strftime("%d_%m_%y")
+
+    with open(f"logs/log{fechalog}.log", "a") as writelog: ### a == append
+        writelog.write(f"[{fechahoralog}]:{mensaje}\n")
+
 app = Flask(__name__)
 
 db_config = {
@@ -17,6 +33,7 @@ def conectar_base():
         conn = mysql.connector.connect(**db_config)
         return conn
     except mysql.connector.Error as err:
+        crearlog(f"No se pudo conectar a la base de datos, error {err}")
         print(f"no se pudo conectar {err}")
         return None
 
@@ -29,9 +46,9 @@ def registrar():
         user_mail = datos.get("mail")
         user_passwd = datos.get("password")
         ip_usereg = request.remote_addr
-        print(f"usuario: {user_nick}\nmail:{user_mail}\npasswd:{user_passwd}")
         conexion = conectar_base()
         if conexion is None:
+            crearlog(f"Ocurrió un error en la base de datos")
             return f"Error en la base de datos",500
         
         cursor = conexion.cursor()
@@ -47,13 +64,15 @@ def registrar():
 
             conexion.commit()
 
-
+            crearlog(f"El usuario {user_nick} se registró con exito en la base de datos desde {ip_usereg}.")
             return "Usuario registrado con exito",205
         
         except IntegrityError:
+            crearlog(f"una persona desde {ip_usereg} intento registrarse con un usuario ya creado ({user_nick})")
             return "El usuario ya esta registrado!",206
         
         except Error as e:
+            crearlog(f"la dirección {ip_usereg} tuvo un fallo al registrarse, problema del server con mysql")
             return f"Error de mysql {e}",207
         finally:
             if conexion.is_connected():
@@ -61,8 +80,10 @@ def registrar():
                 conexion.close()
 
     elif request.method == "GET":
+        crearlog(f"La dirección {request.remote_addr} se conectó con exito (METODO GET)")
         return "conexión exitosa!",200
     else:
+        crearlog(f"La dirección {request.remote_addr} no pudo conectarse (METODO GET)")
         return "CONEXION ORRIBLE",400
     
 @app.route("/auth",methods=["POST"])
@@ -87,12 +108,15 @@ def auth():
         passwd_db = resultado[0]
 
         if passwd_db == password:
+            crearlog(f"Inicio de sesión exitoso {username} desde {ip}")
             print(f"Inicio de sesión exitoso {username} desde {ip}")
             return f"Inicio de sesión exitoso {username} desde {ip}",200
         else:
+            crearlog(f"el usuario {username} desde {ip} ingreso mal la contraseña")
             print(f"el usuario {username} desde {ip} ingreso mal la contraseña")
             return f"Contraseña incorrecta",401
     except Error as r:
+        crearlog(f"La dirección {ip} tuvo un problema de mysql para iniciar sesión con {username} error:{r}")
         return f"Error de sql {r}",500
     
     finally:
