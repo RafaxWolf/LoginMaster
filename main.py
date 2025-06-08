@@ -81,15 +81,20 @@ def comprobar_login(usuario,passwd):
             solicitudlogin = requests.post(urlinicio,json=data)
 
             if solicitudlogin.status_code == 200:
+                messagebox.showinfo(title="Exito",message="Iniciaste sesión!")
                 print("iniciaste sesion")
             elif solicitudlogin.status_code == 401:
+                messagebox.showerror(title="Error",message="Contraseña incorrecta!")
                 print("contraseña incorrecta")
             elif solicitudlogin.status_code == 404:
+                messagebox.showerror(title="Error",message=f"No existe el usuario {usuario}.")
                 print("No existe el usuario")
             else:
+                messagebox.showerror(title="Error",message=f"Error imposible {solicitudlogin.status_code} === {solicitudlogin.text}")
                 print(f"Error imposible {solicitudlogin.status_code} === {solicitudlogin.text}")
 
         except requests.exceptions.RequestException as rr:
+            messagebox.showerror(title="Error",message=f"no hay conexion con el servidorss === {rr}")
             print(f"no hay conexion con el servidorss === {rr}")
 
 def abrir_registro():
