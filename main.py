@@ -1,5 +1,6 @@
 from ui.login_ui import loginscreen, cerrar_login
 from ui.register_ui import registerscreen, cerrar_register
+from ui.menuhome import main_home
 from tkinter import messagebox
 import requests
 urlregistrar = "http://127.0.0.1:5000/registrar"
@@ -11,6 +12,10 @@ def abrir_login():
     print("abriendo login")
     cerrar_register()
     loginscreen(linkregistro,abrir_registro)
+
+def abrir_home(usuario):
+    cerrar_login()
+    main_home(usuario)
 
 def comprobardatos(usuario,correo,passwd,conpasswd): ###comprueba si los datos del registro se pueden mandar a la base de datos
     if not usuario or not correo or not passwd or not conpasswd:
@@ -82,7 +87,7 @@ def comprobar_login(usuario,passwd):
 
             if solicitudlogin.status_code == 200:
                 messagebox.showinfo(title="Exito",message="Iniciaste sesión!")
-                print("iniciaste sesion")
+                abrir_home(usuario)
             elif solicitudlogin.status_code == 401:
                 messagebox.showerror(title="Error",message="Contraseña incorrecta!")
                 print("contraseña incorrecta")

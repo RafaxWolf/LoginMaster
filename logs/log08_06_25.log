@@ -1,0 +1,12 @@
+[2025-06-08 11:45:46.560338]:La dirección 127.0.0.1 se conectó con exito (METODO GET)
+[2025-06-08 11:45:50.735795]:No se pudo conectar a la base de datos, error 2003 (HY000): Can't connect to MySQL server on 'localhost:3306' (10061)
+[2025-06-08 11:45:50.738761]:Ocurrió un error en la base de datos
+[2025-06-08 11:46:06.688881]:La dirección 127.0.0.1 se conectó con exito (METODO GET)
+[2025-06-08 11:46:15.280467]:No se pudo conectar a la base de datos, error 2013 (HY000): Lost connection to MySQL server at 'reading initial communication packet', system error: 0
+[2025-06-08 11:46:15.283678]:Ocurrió un error en la base de datos
+[2025-06-08 11:46:55.036358]:La dirección 127.0.0.1 se conectó con exito (METODO GET)
+[2025-06-08 11:46:55.173383]:El usuario calaña se registró con exito en la base de datos desde 127.0.0.1.
+[2025-06-08 11:50:10.252725]:Inicio de sesión exitoso sapallo desde 127.0.0.1
+[2025-06-08 11:50:20.476657]:Inicio de sesión exitoso sapallo desde 127.0.0.1
+[2025-06-08 11:52:02.988079]:Inicio de sesión exitoso sapallo desde 127.0.0.1
+[2025-06-08 11:53:38.342787]:Inicio de sesión exitoso calaña desde 127.0.0.1
