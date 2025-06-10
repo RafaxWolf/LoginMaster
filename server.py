@@ -5,22 +5,32 @@ from mysql.connector import IntegrityError,Error
 import os
 from datetime import datetime
 
+### Verifica si existe la carpeta logs, si no, la crea
 if os.path.exists("logs"):
     print("existe")
 else:
     os.mkdir("logs")
 
+
+### Crea un log de eventos
 def crearlog(mensaje):
 
     fechahoralog = datetime.now()
-    fechahoralogformat = fechahoralog.strftime("%H:%M:%S_%d/%m/%y")
+
+    # Deprecated:
+    #fechahoralogformat = fechahoralog.strftime("%H:%M:%S_%d/%m/%y")
+
+    # New format:
     fechalog = fechahoralog.strftime("%d_%m_%y")
 
-    with open(f"logs/log{fechalog}.log", "a") as writelog: ### a == append
+    ### Crea/Edita el archivo de log actual del dia
+    with open(f"logs/log-{fechalog}.log", "a") as writelog: ### a == append
         writelog.write(f"[{fechahoralog}]:{mensaje}\n")
 
 app = Flask(__name__)
 
+### Configuración de la base de datos
+##!     Hay que ponerlo con dotenv para que no sea tan en plano xD
 db_config = {
     "user":"root",
     "password":"",
@@ -28,6 +38,8 @@ db_config = {
     "database":"loginmaster_db"
 }
 
+
+### Conexión a la base de datos
 def conectar_base():
     try:
         conn = mysql.connector.connect(**db_config)
@@ -39,6 +51,8 @@ def conectar_base():
 
 @app.route("/registrar",methods=["POST","GET"])
 
+
+### Registrar un usuario
 def registrar():
     if request.method == "POST":
         datos = request.get_json()
@@ -64,15 +78,15 @@ def registrar():
 
             conexion.commit()
 
-            crearlog(f"El usuario {user_nick} se registró con exito en la base de datos desde {ip_usereg}.")
+            crearlog(f"El usuario: {user_nick} se registró con exito en la base de datos desde: {ip_usereg}.")
             return "Usuario registrado con exito",205
         
         except IntegrityError:
-            crearlog(f"una persona desde {ip_usereg} intento registrarse con un usuario ya creado ({user_nick})")
+            crearlog(f"Una persona desde: {ip_usereg} intento registrarse con un usuario ya creado ({user_nick})")
             return "El usuario ya esta registrado!",206
         
         except Error as e:
-            crearlog(f"la dirección {ip_usereg} tuvo un fallo al registrarse, problema del server con mysql")
+            crearlog(f"La dirección: {ip_usereg} tuvo un fallo al intentar registrarse!\nProblema del server con mysql")
             return f"Error de mysql {e}",207
         finally:
             if conexion.is_connected():
@@ -80,10 +94,10 @@ def registrar():
                 conexion.close()
 
     elif request.method == "GET":
-        crearlog(f"La dirección {request.remote_addr} se conectó con exito (METODO GET)")
+        crearlog(f"La dirección: {request.remote_addr} se conectó con exito (METODO GET)")
         return "conexión exitosa!",200
     else:
-        crearlog(f"La dirección {request.remote_addr} no pudo conectarse (METODO GET)")
+        crearlog(f"La dirección: {request.remote_addr} no pudo conectarse (METODO GET)")
         return "CONEXION ORRIBLE",400
     
 @app.route("/auth",methods=["POST"])
@@ -108,16 +122,16 @@ def auth():
         passwd_db = resultado[0]
 
         if passwd_db == password:
-            crearlog(f"Inicio de sesión exitoso {username} desde {ip}")
-            print(f"Inicio de sesión exitoso {username} desde {ip}")
-            return f"Inicio de sesión exitoso {username} desde {ip}",200
+            crearlog(f"Inicio de sesión exitoso: {username} desde: {ip}")
+            print(f"Inicio de sesión exitoso: {username} desde: {ip}")
+            return f"Inicio de sesión exitoso: {username} desde: {ip}",200
         else:
-            crearlog(f"el usuario {username} desde {ip} ingreso mal la contraseña")
-            print(f"el usuario {username} desde {ip} ingreso mal la contraseña")
+            crearlog(f"El usuario: {username} desde: {ip} ingreso mal la contraseña")
+            print(f"El usuario: {username} desde: {ip} ingreso mal la contraseña")
             return f"Contraseña incorrecta",401
     except Error as r:
-        crearlog(f"La dirección {ip} tuvo un problema de mysql para iniciar sesión con {username} error:{r}")
-        return f"Error de sql {r}",500
+        crearlog(f"La dirección: {ip} tuvo un problema de MySQL para iniciar sesión como {username} error:{r}")
+        return f"Error de SQL {r}",500
     
     finally:
         if conexion.is_connected():
