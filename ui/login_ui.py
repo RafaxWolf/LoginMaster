@@ -43,7 +43,7 @@ def loginscreen(abrir_registro,comprobar_login):
 
     linktoregister = tk.Label(formulario,text="Si no tienes cuenta, registrate acá",fg="blue",cursor="hand2",font=("Helvetica 10 underline"),background="#FFFFFF")
     linktoregister.pack()
-    linktoregister.bind("<Button-1>",lambda e: abrir_registro())
+    linktoregister.bind("<Button-1>", lambda e: abrir_registro())
 
 
     def recolectar():

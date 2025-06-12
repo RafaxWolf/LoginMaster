@@ -3,19 +3,11 @@ from ui.register_ui import registerscreen, cerrar_register
 from ui.menuhome import main_home
 from tkinter import messagebox
 import requests
+import bcrypt
 
 ### URL del servidor de registro
 ### Cambiar esta URL por la de tu servidor si es necesario
-urlregistrar = "http://127.0.0.1:5000/registrar"
-def linkregistro():
-    cerrar_login()
-    input()
-
-### Funcion para abrir el login
-def abrir_login():
-    print("abriendo login")
-    cerrar_register()
-    loginscreen(linkregistro,abrir_registro)
+urlregistrar = "http://52.71.116.141:5000/registrar"
 
 ### Funcion para abrir el home
 def abrir_home(usuario):
@@ -60,11 +52,15 @@ def comprobardatos(usuario,correo,passwd,conpasswd): ### Comprueba si los datos 
         try: ### Si todo es correcto, manda los datos a la base de datos
             solicitud = requests.get(urlregistrar)
 
+            def hash_password(password):
+                salt = bcrypt.gensalt()
+                return bcrypt.hashpw(password.encode(), salt).decode()
+
             if solicitud.status_code == 200:
                 cuenta = {
                     "user":usuario,
                     "mail":correo,
-                    "password":passwd
+                    "password":hash_password(passwd)
                 }
                 solicitudpost = requests.post(urlregistrar,json=cuenta)
 
@@ -102,7 +98,7 @@ def comprobar_login(usuario,passwd):
     else:
 
         ### URL de inicio de sesión
-        urlinicio = "http://127.0.0.1:5000/auth"
+        urlinicio = "http://52.71.116.141:5000/auth"
         data = {
             "username":usuario,
             "password":passwd
@@ -135,13 +131,18 @@ def comprobar_login(usuario,passwd):
             messagebox.showerror(title="Error",message=f"No hay conexion con el servidor! === {rr}")
             print(f"No hay conexion con el servidor === {rr}")
 
-
-##! Funcion Fixeada, en teoria no deberia de saltar ningun error.
-def abrir_registro(usuario,passwd):
+##! Bugfix
+### Funcion para abrir el login
+def abrir_login():
+    print("abriendo login")
+    cerrar_register()
+    loginscreen(abrir_registro,comprobar_login)
+### Funcion para abrir el registro
+def abrir_registro():
     print("abriendo registro")
     cerrar_login()
     registerscreen(comprobardatos,abrir_login)
 
-##! Bugfix
+### Main
 if __name__ == "__main__":
     loginscreen(abrir_registro,comprobar_login)

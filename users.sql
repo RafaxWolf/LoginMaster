@@ -31,7 +31,7 @@ CREATE TABLE `users` (
   `id` int(16) NOT NULL,
   `username` varchar(20) NOT NULL,
   `correo` varchar(40) NOT NULL,
-  `passwd` varchar(40) NOT NULL,
+  `passwd` varchar(256) NOT NULL,
   `ip_registro` varchar(50) NOT NULL,
   `fecha_creacion` timestamp NULL DEFAULT current_timestamp(),
   `user_type` varchar(15) NOT NULL

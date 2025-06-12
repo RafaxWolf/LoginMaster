@@ -44,9 +44,9 @@ def registerscreen(comprobardatos,abrir_login):
     conpwdinput.pack()
 
 
-    linktologin = tk.Label(formulario,text="Si no tienes cuenta, registrate acá",fg="blue",cursor="hand2",font=("Helvetica 10 underline"),background="#FFFFFF")
+    linktologin = tk.Label(formulario,text="Si tienes una cuenta, inicia sesion acá",fg="blue",cursor="hand2",font=("Helvetica 10 underline"),background="#FFFFFF")
     linktologin.pack()
-    linktologin.bind("<Button-1>",lambda e: abrir_login())
+    linktologin.bind("<Button-1>", lambda e: abrir_login())
 
 
     def mandardatos():

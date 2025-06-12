@@ -1,9 +1,10 @@
-###ola
+### Librerias
 from flask import Flask,request,jsonify
 import mysql.connector
 from mysql.connector import IntegrityError,Error
 import os
 from datetime import datetime
+import bcrypt
 
 ### Verifica si existe la carpeta logs, si no, la crea
 if os.path.exists("logs"):
@@ -32,10 +33,10 @@ app = Flask(__name__)
 ### Configuración de la base de datos
 ##!     Hay que ponerlo con dotenv para que no sea tan en plano xD
 db_config = {
-    "user":"root",
-    "password":"",
-    "host":"localhost",
-    "database":"loginmaster_db"
+    "user":"simbio",
+    "password":"simbionte123",
+    "host":"0.0.0.0",
+    "database":"login_db"
 }
 
 
@@ -98,8 +99,9 @@ def registrar():
         return "conexión exitosa!",200
     else:
         crearlog(f"La dirección: {request.remote_addr} no pudo conectarse (METODO GET)")
-        return "CONEXION ORRIBLE",400
-    
+        return "CONEXION HORRIBLE",400
+
+
 @app.route("/auth",methods=["POST"])
 def auth():
     data = request.json
@@ -113,15 +115,16 @@ def auth():
     
     cursor = conexion.cursor()
     try:
-        cursor.execute("SELECT passwd FROM users WHERE username = %s",(username,))
+        query_sql = "SELECT username FROM users WHERE username = %s"
+        cursor.execute(query_sql,(username,))
         resultado = cursor.fetchone()
 
         if resultado is None:
             return "El usuario no existe",404
         
-        passwd_db = resultado[0]
+        passwd_db = resultado[0].encode()
 
-        if passwd_db == password:
+        if bcrypt.checkpw(password.encode(), passwd_db):
             crearlog(f"Inicio de sesión exitoso: {username} desde: {ip}")
             print(f"Inicio de sesión exitoso: {username} desde: {ip}")
             return f"Inicio de sesión exitoso: {username} desde: {ip}",200

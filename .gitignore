@@ -1,0 +1,7 @@
+# Files
+*.log
+
+# Folders
+*__pycache__/
+.venv/
+logs/
