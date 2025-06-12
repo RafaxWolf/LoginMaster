@@ -1,6 +1,6 @@
 from ui.login_ui import loginscreen, cerrar_login
 from ui.register_ui import registerscreen, cerrar_register
-from ui.menuhome import main_home
+from ui.menuhome import main_home,cerrar_home
 from tkinter import messagebox
 import requests
 import bcrypt
@@ -9,10 +9,16 @@ import bcrypt
 ### Cambiar esta URL por la de tu servidor si es necesario
 urlregistrar = "http://52.71.116.141:5000/registrar"
 
+def cerrar_sesion():
+    print("hola")
+    messagebox.showinfo(title="atencion",message="Cerraste sesión.")
+    cerrar_home()
+    loginscreen(abrir_registro,comprobar_login)
+
 ### Funcion para abrir el home
 def abrir_home(usuario):
     cerrar_login()
-    main_home(usuario)
+    main_home(usuario,cerrar_sesion)
 
 
 

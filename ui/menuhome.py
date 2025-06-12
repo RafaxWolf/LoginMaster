@@ -1,6 +1,6 @@
 import tkinter as tk
 usuario = None
-def main_home(usuario):
+def main_home(usuario,cerrar_sesion):
     if not usuario:
         usuario = "null"
     global mainhomew
@@ -19,10 +19,16 @@ def main_home(usuario):
     mainpage = tk.Frame(mainhomew,bg="#FFFFFF")
     mainpage.place(relwidth=1,relheight=0.9,rely=0.1)
 
+    cerrarbutton = tk.Button(header,text="Cerrar Sesión",command=cerrar_sesion)
+    cerrarbutton.place(relx=0.93,rely=0.25,anchor="ne",width=100,height=30)
+
     l1 = tk.Label(mainpage,text="LoginMaster Services:",fg="#000000",font="Arial 29 bold" ,bg="#FFFFFF")
     l1.pack(pady=30)
 
     mainhomew.mainloop()
+
+def cerrar_home():
+    mainhomew.destroy()
 
 if __name__ == "__main__":
     main_home(None)
