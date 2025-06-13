@@ -55,6 +55,7 @@ def registerscreen(comprobardatos,abrir_login):
         passwd = pwdinput.get()
         confpasswd = conpwdinput.get()
         comprobardatos(usuario,correo,passwd,confpasswd)
+          
     registersubmit = tk.Button(formulario,text="Registrarse",fg="#000000",bg="#FFFFFF",activeforeground="black",
                             activebackground="#6a86eb",highlightbackground="black",highlightthickness=1,bd=1,relief="solid",
                             font=("Arial 12 bold"),cursor="hand2",command=mandardatos)

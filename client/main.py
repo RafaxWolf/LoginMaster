@@ -14,7 +14,9 @@ def abrir_home(usuario):
     cerrar_login()
     main_home(usuario)
 
-
+# -------------------------------------------------------------------------------------------------------
+# |                                              REGISTER                                               |
+# -------------------------------------------------------------------------------------------------------
 
 def comprobardatos(usuario,correo,passwd,conpasswd): ### Comprueba si los datos del registro se pueden mandar a la base de datos
     ### Si los campos estan vacios, muestra un mensaje de error
@@ -57,6 +59,25 @@ def comprobardatos(usuario,correo,passwd,conpasswd): ### Comprueba si los datos 
                 return bcrypt.hashpw(password.encode(), salt).decode()
 
             if solicitud.status_code == 200:
+                # Verificar si el correo ya existe en la base de datos
+                # Si no existe el endpoint /verificar_mail en el servidor, esta verificación no funcionará.
+                # Debes implementar un endpoint en el servidor que permita verificar si un correo ya está registrado.
+                # Mientras tanto, este código intentará hacer la verificación y mostrará un error si el endpoint no existe.
+                verificar_user_url = f"http://52.71.166.141:5000/verificar_user?user={usuario}"
+                verificar_mail_url = f"http://52.71.116.141:5000/verificar_mail?mail={correo}"
+                try:
+                    respuesta_user = requests.get(verificar_user_url)
+                    if respuesta_user.status_code == 200 and respuesta_user.json().get("existe"):
+                        messagebox.showerror(title="Error", message="El usuario ya está registrado.")
+                        return
+                    respuesta_mail = requests.get(verificar_mail_url)
+                    if respuesta_mail.status_code == 200 and respuesta_mail.json().get("existe"):
+                        messagebox.showerror(title="Error", message="El correo ya está registrado.\nPrueba con otro.")
+                        return
+                except requests.exceptions.RequestException:
+                    messagebox.showerror(title="Error", message="No se pudo verificar el correo.\nPor favor, intenta más tarde.")
+                    return
+
                 cuenta = {
                     "user":usuario,
                     "mail":correo,
@@ -65,20 +86,30 @@ def comprobardatos(usuario,correo,passwd,conpasswd): ### Comprueba si los datos 
                 solicitudpost = requests.post(urlregistrar,json=cuenta)
 
                 ##! jajaja, API le pone, la wea no da ni pa proyecto de colegio TP
-                messagebox.showinfo(title="Exito",message=f"te conectaste con exito a la api: {solicitudpost.text}")
+                print(f"te conectaste con exito a la api: {solicitudpost.text} | Codigo: {solicitudpost.status_code}")
 
                 if solicitudpost.status_code == 205:
-                    messagebox.showinfo(title="Exito",message=f"{solicitudpost.text}")
+                    messagebox.showinfo(title="Registro",message=f"{solicitudpost.text}")
+                    messagebox.showinfo(title="Exito",message=f"Cuenta creada con exito!\nAhora puedes iniciar sesión como {usuario}")
+                    abrir_login()
+
                 elif solicitud.status_code == 206:
                     messagebox.showwarning(title="Atencion",message=f"{solicitudpost.text}")
+
                 elif solicitud.status_code == 207:
                     messagebox.showerror(title="Error",message=f"{solicitudpost.text}")
+
                 else:
                     messagebox.showerror(title="Error",message="Error fatal")                    
             else:
                 messagebox.showerror(title="Error",message=f"{solicitud.status_code} {solicitud.text}")
+
         except requests.exceptions.RequestException as err:
             messagebox.showerror(title="Error",message=f"Error critico: {err}")
+
+# -------------------------------------------------------------------------------------------------------
+# |                                                LOGIN                                                |
+# -------------------------------------------------------------------------------------------------------
 
 ### Verifica si los campos de login son correctos
 def comprobar_login(usuario,passwd):
