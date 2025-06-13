@@ -93,10 +93,13 @@ def server_cli():
             if command == "help":
                 print("[+] Comandos Disponibles:\n")
                 print("/help - Show this help message")
+                print("/clear - Clear the console")
                 for c, info in commands.items():
                     print(f"/{c} - {info['description']}")
                 continue
-
+            elif command == "clear":
+                os.system('cls' if os.name == 'nt' else 'clear')
+                continue
             elif command in commands:
                 try:
                     commands[command]['run'](*args)
@@ -106,14 +109,13 @@ def server_cli():
             else:
                 crearlog(f"[!] Comando desconocido: {command}")
                 print(f"[!] Comando desconocido: {command} - Use '/help' para ver los comandos disponibles.")
+        elif cmd == "clear" or cmd == "cls":
+            os.system('cls' if os.name == 'nt' else 'clear')
+            continue
         else:
             print("[!] Error:\nEl prefix de los comandos es: '/'\nPor favor, usa el prefix para ejecutar los comandos.\n")
             continue
-if __name__ == "__main__":
-    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-        #crearlog("[+] Iniciando el servidor Flask...")
-        console = threading.Thread(target=server_cli,daemon=True,args=())
-        console.start()
+
 # -------------------------------------------------------------------------------------------------------
 # |                                               ENDPONTS                                              |
 # -------------------------------------------------------------------------------------------------------
@@ -273,5 +275,11 @@ def auth():
         if conexion.is_connected():
             cursor.close()
             conexion.close()
+
+if __name__ == "__main__":
+    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        #crearlog("[+] Iniciando el servidor Flask...")
+        console = threading.Thread(target=server_cli,daemon=True,args=())
+        console.start()
 
 app.run(debug=True)
