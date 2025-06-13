@@ -1,18 +1,26 @@
 from ui.login_ui import loginscreen, cerrar_login
 from ui.register_ui import registerscreen, cerrar_register
-from ui.menuhome import main_home
+from ui.menuhome import main_home,cerrar_home
 from tkinter import messagebox
 import requests
 import bcrypt
 
+urlservidor = "http://127.0.0.1:5000" ###http://...:5000
 ### URL del servidor de registro
 ### Cambiar esta URL por la de tu servidor si es necesario
-urlregistrar = "http://52.71.116.141:5000/registrar"
+urlregistrar = f"{urlservidor}/registrar"
+
+### Funcion cerrar sesión
+def cerrar_sesion():
+    print("hola")
+    messagebox.showinfo(title="atencion",message="Cerraste sesión.")
+    cerrar_home()
+    loginscreen(abrir_registro,comprobar_login)
 
 ### Funcion para abrir el home
 def abrir_home(usuario):
     cerrar_login()
-    main_home(usuario)
+    main_home(usuario,cerrar_sesion)
 
 # -------------------------------------------------------------------------------------------------------
 # |                                              REGISTER                                               |
@@ -63,8 +71,8 @@ def comprobardatos(usuario,correo,passwd,conpasswd): ### Comprueba si los datos 
                 # Si no existe el endpoint /verificar_mail en el servidor, esta verificación no funcionará.
                 # Debes implementar un endpoint en el servidor que permita verificar si un correo ya está registrado.
                 # Mientras tanto, este código intentará hacer la verificación y mostrará un error si el endpoint no existe.
-                verificar_user_url = f"http://52.71.166.141:5000/verificar_user?user={usuario}"
-                verificar_mail_url = f"http://52.71.116.141:5000/verificar_mail?mail={correo}"
+                verificar_user_url = f"{urlservidor}/verificar_user?user={usuario}"
+                verificar_mail_url = f"{urlservidor}/verificar_mail?mail={correo}"
                 try:
                     respuesta_user = requests.get(verificar_user_url)
                     if respuesta_user.status_code == 200 and respuesta_user.json().get("existe"):
@@ -129,7 +137,7 @@ def comprobar_login(usuario,passwd):
     else:
 
         ### URL de inicio de sesión
-        urlinicio = "http://52.71.116.141:5000/auth"
+        urlinicio = f"{urlservidor}/auth"
         data = {
             "username":usuario,
             "password":passwd

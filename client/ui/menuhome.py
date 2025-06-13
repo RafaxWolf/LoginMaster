@@ -1,6 +1,8 @@
 import tkinter as tk
+from tkinter import messagebox
+from PIL import Image,ImageTk ###Para insertar imagenes
 usuario = None
-def main_home(usuario):
+def main_home(usuario,cerrar_sesion):
     if not usuario:
         usuario = "null"
     global mainhomew
@@ -19,10 +21,26 @@ def main_home(usuario):
     mainpage = tk.Frame(mainhomew,bg="#FFFFFF")
     mainpage.place(relwidth=1,relheight=0.9,rely=0.1)
 
+    cerrarbutton = tk.Button(header,text="Cerrar Sesión",command=cerrar_sesion)
+    cerrarbutton.place(relx=0.93,rely=0.25,anchor="ne",width=100,height=30)
+
     l1 = tk.Label(mainpage,text="LoginMaster Services:",fg="#000000",font="Arial 29 bold" ,bg="#FFFFFF")
     l1.pack(pady=30)
 
+    loginapp1route = Image.open("client/ui/img/loginotes.png")
+    loginapp1img = ImageTk.PhotoImage(loginapp1route)
+    loginapp1 = tk.Label(mainpage,image=loginapp1img,cursor="hand2")
+    loginapp1.pack(anchor="center")
+
+    loginapp2route = Image.open("client/ui/img/sappico.png")
+    loginapp2img = ImageTk.PhotoImage(loginapp2route)
+    loginapp2 = tk.Label(mainpage,image=loginapp2img,cursor="hand2")
+    loginapp2.pack(anchor="center",pady=30)
+
     mainhomew.mainloop()
 
+def cerrar_home():
+    mainhomew.destroy()
+
 if __name__ == "__main__":
-    main_home(None)
+    main_home(None,None)

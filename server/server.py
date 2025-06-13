@@ -11,6 +11,7 @@ import time
 import io
 import contextlib
 
+urlservidor = "127.0.0.1"
 ### Verifica si existe la carpeta logs, si no, la crea
 if not os.path.exists("logs"):
     os.mkdir("logs")
@@ -36,9 +37,9 @@ app = Flask(__name__)
 ### Configuración de la base de datos
 ##!     Hay que ponerlo con dotenv para que no sea tan en plano xD
 db_config = {
-    "user":"simbio",
+    "user":"root",
     "password":"simbionte123",
-    "host":"0.0.0.0",
+    "host":"127.0.0.1",
     "database":"login_db"
 }
 
@@ -268,7 +269,7 @@ def auth():
     
     cursor = conexion.cursor()
     try:
-        query_sql = "SELECT username FROM users WHERE username = %s"
+        query_sql = "SELECT passwd FROM users WHERE username = %s"
         cursor.execute(query_sql,(username,))
         resultado = cursor.fetchone()
 
@@ -300,4 +301,4 @@ if __name__ == "__main__":
         console = threading.Thread(target=server_cli,daemon=True,args=())
         console.start()
 
-app.run(debug=True)
+app.run(host=urlservidor,port=5000,debug=True)
