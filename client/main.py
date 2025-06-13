@@ -18,9 +18,9 @@ def cerrar_sesion():
     loginscreen(abrir_registro,comprobar_login)
 
 ### Funcion para abrir el home
-def abrir_home(usuario):
+def abrir_home(usuario,rango):
     cerrar_login()
-    main_home(usuario,cerrar_sesion)
+    main_home(usuario,cerrar_sesion,rango)
 
 # -------------------------------------------------------------------------------------------------------
 # |                                              REGISTER                                               |
@@ -148,8 +148,9 @@ def comprobar_login(usuario,passwd):
 
             ### Si es 200 inicia la sesion
             if solicitudlogin.status_code == 200:
-                messagebox.showinfo(title="Exito",message="Iniciaste sesión!")
-                abrir_home(usuario)
+                rango = solicitudlogin.text
+                messagebox.showinfo(title="Exito",message=f"Iniciaste sesión!")
+                abrir_home(usuario,rango)
 
             ### Si es 401, contraseña incorrecta
             elif solicitudlogin.status_code == 401:

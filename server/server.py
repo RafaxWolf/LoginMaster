@@ -272,7 +272,8 @@ def auth():
         query_sql = "SELECT passwd FROM users WHERE username = %s"
         cursor.execute(query_sql,(username,))
         resultado = cursor.fetchone()
-
+        cursor.execute("SELECT user_type FROM users WHERE username = %s",(username,))
+        user_rank = cursor.fetchone()
         if resultado is None:
             return "El usuario no existe",404
         
@@ -281,7 +282,7 @@ def auth():
         if bcrypt.checkpw(password.encode(), passwd_db):
             crearlog(f"Inicio de sesión exitoso: {username} desde: {ip}")
             print(f"Inicio de sesión exitoso: {username} desde: {ip}")
-            return f"Inicio de sesión exitoso: {username} desde: {ip}",200
+            return f"{user_rank[0]}",200
         else:
             crearlog(f"El usuario: {username} desde: {ip} ingreso mal la contraseña")
             print(f"El usuario: {username} desde: {ip} ingreso mal la contraseña")

@@ -2,9 +2,10 @@ import tkinter as tk
 from tkinter import messagebox
 from PIL import Image,ImageTk ###Para insertar imagenes
 usuario = None
-def main_home(usuario,cerrar_sesion):
+def main_home(usuario,cerrar_sesion,rango):
     if not usuario:
         usuario = "null"
+    messagebox.showinfo(title="exito",message=f"{rango}")
     global mainhomew
     mainhomew = tk.Tk()
     mainhomew.geometry("600x600")
