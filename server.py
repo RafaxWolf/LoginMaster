@@ -5,6 +5,30 @@ from mysql.connector import IntegrityError,Error
 import os
 from datetime import datetime
 import bcrypt
+import threading
+
+def consola_input():
+
+    while True:
+        fechahoralog = datetime.now()
+        fechalog = fechahoralog.strftime("%d_%m_%y")
+        comando = input("")
+        if comando == "/help":
+            print("Ayuda:\n" \
+            "/show logs >> Para mostrar los logs del dia actual.")
+        elif comando == "/show log" or comando == "/show logs":
+            if os.path.exists(f"logs/log-{fechalog}.log"):
+                with open(f"logs/log-{fechalog}.log","r") as leerlog:
+                    print(leerlog.read())    
+            else:
+                print("No existen logs en el dia de hoy.")
+        elif comando == "/now":
+            print(f"la hora actual del servidor es {fechahoralog.strftime("%d:%m:%y")}")
+        else:
+            print("Comando Desconocido. La lista de los comandos se desplega con /help")
+
+consola = threading.Thread(target=consola_input,daemon=True,args=())
+consola.start()
 
 ### Verifica si existe la carpeta logs, si no, la crea
 if os.path.exists("logs"):
@@ -142,3 +166,5 @@ def auth():
             conexion.close()
 
 app.run(debug=True)
+
+
