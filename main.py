@@ -1,6 +1,9 @@
+###Importar UI
 from ui.login_ui import loginscreen, cerrar_login
 from ui.register_ui import registerscreen, cerrar_register
 from ui.menuhome import main_home,cerrar_home
+
+### Importar Librerias
 from tkinter import messagebox
 import requests
 import bcrypt
@@ -9,6 +12,7 @@ import bcrypt
 ### Cambiar esta URL por la de tu servidor si es necesario
 urlregistrar = "http://52.71.116.141:5000/registrar"
 
+### Funcion cerrar sesión
 def cerrar_sesion():
     print("hola")
     messagebox.showinfo(title="atencion",message="Cerraste sesión.")
@@ -21,7 +25,7 @@ def abrir_home(usuario):
     main_home(usuario,cerrar_sesion)
 
 
-
+### Funcion Registrar usuarios
 def comprobardatos(usuario,correo,passwd,conpasswd): ### Comprueba si los datos del registro se pueden mandar a la base de datos
     ### Si los campos estan vacios, muestra un mensaje de error
     if not usuario or not correo or not passwd or not conpasswd:
@@ -58,21 +62,30 @@ def comprobardatos(usuario,correo,passwd,conpasswd): ### Comprueba si los datos 
         try: ### Si todo es correcto, manda los datos a la base de datos
             solicitud = requests.get(urlregistrar)
 
+            ### Llamar a esta funcion para retornar la contraseña encriptada
             def hash_password(password):
                 salt = bcrypt.gensalt()
                 return bcrypt.hashpw(password.encode(), salt).decode()
 
+            ### Si el server retorna 200 entonces es por que tienes conexión con el server
             if solicitud.status_code == 200:
                 cuenta = {
                     "user":usuario,
                     "mail":correo,
                     "password":hash_password(passwd)
                 }
+
+                ### Envias los datos al server para que lo compruebe
                 solicitudpost = requests.post(urlregistrar,json=cuenta)
 
                 ##! jajaja, API le pone, la wea no da ni pa proyecto de colegio TP
                 messagebox.showinfo(title="Exito",message=f"te conectaste con exito a la api: {solicitudpost.text}")
 
+
+                ### al enviar los datos el server devuelve un status code
+                ### si el server devuelve 205 entonces es por que paso todos los filtros y lo registro en la base de datos
+                ### si el server devuevle 206 entonces es por que el usuario ya existe
+                ### si el server duvuelve 207 es por que hubo un fallo de conexion de parte del server a su mysql
                 if solicitudpost.status_code == 205:
                     messagebox.showinfo(title="Exito",message=f"{solicitudpost.text}")
                 elif solicitud.status_code == 206:
@@ -111,9 +124,11 @@ def comprobar_login(usuario,passwd):
         }
 
         try:  ### Codigos HTTP
+
+            ### Envia los datos del cliente al servidor para que los compruebe
             solicitudlogin = requests.post(urlinicio,json=data)
 
-            ### Si es 200 inicia la sesion
+            ### Si el status code es 200 inicia la sesion
             if solicitudlogin.status_code == 200:
                 messagebox.showinfo(title="Exito",message="Iniciaste sesión!")
                 abrir_home(usuario)
