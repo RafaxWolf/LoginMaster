@@ -1,4 +1,4 @@
-### Librerias
+### Libreriasss
 from flask import Flask,request,jsonify
 import mysql.connector
 from mysql.connector import IntegrityError,Error
