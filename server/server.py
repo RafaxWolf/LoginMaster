@@ -8,6 +8,8 @@ import bcrypt
 import importlib
 import threading
 import time
+import io
+import contextlib
 
 ### Verifica si existe la carpeta logs, si no, la crea
 if not os.path.exists("logs"):
@@ -27,7 +29,7 @@ def crearlog(mensaje):
 
     ### Crea/Edita el archivo de log actual del dia
     with open(f"logs/log-{fechalog}.log", "a") as writelog: ### a == append
-        writelog.write(f"[{fechahoralog}]:{mensaje}\n")
+        writelog.write(f"[{fechahoralog}]: {mensaje}\n")
 
 app = Flask(__name__)
 
@@ -52,34 +54,37 @@ def conectar_base():
         print(f"no se pudo conectar {err}")
         return None
 
+
+###                      Cargador de comandos
 def load_commands():
     time.sleep(1)  # Espera un segundo para asegurar que el servidor esté listo
     print("[+] Cargando comandos...")
     commands = {}
-    if os.path.exists(commands_dir):
+    if os.path.exists(commands_dir): # Verifica si el directorio 'commands' existe
         for file in os.listdir(commands_dir):
             if file.endswith(".py"):
-                command_name = file[:-3]
+                command_name = file[:-3] # Elimina la extensión .py
                 command = importlib.import_module(f"commands.{command_name}")
 
                 if hasattr(command, 'name') and hasattr(command, 'run'):
                     commands[command.name] = {
-                        'description': getattr(command, 'description', 'No description provided'),
-                        'run': command.run
+                        'description': getattr(command, 'description', 'No description provided'), # Obtiene la descripción del comando, si no existe, asigna un valor por defecto
+                        'run': command.run # Asigna la función run del comando
                     }
         return commands
+        
     
-    else:
-        print("[!] El directorio 'commands' no existe, creandolo...")
-        os.mkdir("commands")
+    else: # Si el directorio 'commands' no existe, lo crea
+        print("[!] El directorio 'commands' no existe, creando el directorio...")
+        os.mkdir(commands_dir)
         print("[+] Directorio 'commands' creado.")
-        print("[+] Ahora puedes agregar comandos personalizados en el directorio 'commands'.")
+        print("[+] Ahora puedes agregar comandos personalizados en el directorio 'commands'\n")
 
-
+###                         Consola del servidor
 def server_cli():
     time.sleep(1)  # Espera un segundo para asegurar que el servidor esté listo
-    commands = load_commands()
-    print("[+] Console initialized, type '/help' for commands. [+]")
+    commands = load_commands() # Carga los comandos desde el directorio 'commands'
+    print("[+] Console initialized, type '/help' for commands. [+]\n")
     while True:
         cmd = input(">> ").strip()
         if cmd.startswith("/"):
@@ -90,27 +95,40 @@ def server_cli():
             command = parts[0]
             args = parts[1:]
 
-            if command == "help":
+            ### Manejo de comandos
+            if command == "help": # Comando para mostrar la ayuda
                 print("[+] Comandos Disponibles:\n")
                 print("/help - Show this help message")
                 print("/clear - Clear the console")
-                for c, info in commands.items():
-                    print(f"/{c} - {info['description']}")
+                try:
+                    for c, info in commands.items():
+                        print(f"/{c} - {info['description']}")
+                except Exception as e:
+                    continue
                 continue
-            elif command == "clear":
+            elif command == "clear": # Comando para limpiar la consola
                 os.system('cls' if os.name == 'nt' else 'clear')
                 continue
-            elif command in commands:
+            elif command in commands: # Verifica si el comando ejecutado existe en el diccionario de comandos
                 try:
-                    commands[command]['run'](*args)
-                except Exception as e:
+                    buffer = io.StringIO() # Crea un buffer para capturar la salida del comando
+                    with contextlib.redirect_stdout(buffer): # Redirige la salida estándar al buffer
+                        commands[command]['run'](*args)
+                    output = buffer.getvalue() # Obtiene el valor del buffer
+                    print(output) # Imprime el valor del buffer en la consola
+
+                    crearlog(f"Comando ejecutado: {command} con argumentos: {args}")
+                    crearlog(output)
+                except Exception as e: # Si ocurre un error al ejecutar el comando, muestra un mensaje de error
                     crearlog(f"[!] Error al ejecutar el comando {command}: {e}")
                     print(f"[!] Error al ejecutar el comando {command}: {e}")
-            else:
+            else: # Si el comando no existe, muestra un mensaje de error
                 crearlog(f"[!] Comando desconocido: {command}")
                 print(f"[!] Comando desconocido: {command} - Use '/help' para ver los comandos disponibles.")
         elif cmd == "clear" or cmd == "cls":
             os.system('cls' if os.name == 'nt' else 'clear')
+            continue
+        elif cmd == "":
             continue
         else:
             print("[!] Error:\nEl prefix de los comandos es: '/'\nPor favor, usa el prefix para ejecutar los comandos.\n")
