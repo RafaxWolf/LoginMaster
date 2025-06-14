@@ -1,8 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
 
+def cerrar_home_notepad():
+    ventana.destroy()
+
 # === CONFIGURACIÓN INICIAL ===
-def notepad_home(usuario,abrir_home):
+def notepad_home(usuario):
+    global ventana
     ventana = tk.Tk()
     ventana.title("Mis LoginNotes")
     ventana.geometry("600x400")
@@ -62,8 +66,9 @@ def notepad_home(usuario,abrir_home):
     for _ in range(4):
         agregar_notas()
 
+
 # === INICIAR LOOP DE LA APP ===
     ventana.mainloop()
 
 if __name__ == "__main__":
-    notepad_home("simbio",None)
+    notepad_home("simbio")

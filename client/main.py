@@ -1,6 +1,7 @@
 from ui.login_ui import loginscreen, cerrar_login
 from ui.register_ui import registerscreen, cerrar_register
 from ui.menuhome import main_home,cerrar_home
+from ui.notepad_home import notepad_home, cerrar_home_notepad
 from tkinter import messagebox
 import requests
 import bcrypt
@@ -20,7 +21,12 @@ def cerrar_sesion():
 ### Funcion para abrir el home
 def abrir_home(usuario,rango):
     cerrar_login()
-    main_home(usuario,cerrar_sesion,rango)
+    main_home(usuario,cerrar_sesion,rango,abrir_notepad_home)
+
+
+def abrir_notepad_home(usuario):
+    cerrar_home()
+    notepad_home(usuario)
 
 # -------------------------------------------------------------------------------------------------------
 # |                                              REGISTER                                               |

@@ -3,7 +3,7 @@ from tkinter import messagebox
 from PIL import Image,ImageTk ###Para insertar imagenes
 import os
 usuario = None
-def main_home(usuario,cerrar_sesion,rango):
+def main_home(usuario,cerrar_sesion,rango,abrir_notepad_home):
     if not usuario:
         usuario = "null"
     messagebox.showinfo(title="exito",message=f"{rango}")
@@ -35,6 +35,7 @@ def main_home(usuario,cerrar_sesion,rango):
     loginapp1img = ImageTk.PhotoImage(loginapp1route)
     loginapp1 = tk.Label(mainpage,image=loginapp1img,cursor="hand2")
     loginapp1.pack(anchor="center")
+    loginapp1.bind("<Button-1>",lambda e:abrir_notepad_home(usuario))
 
     ruta_imagen2 = os.path.join(carpeta_actual,"img","sappico.png")
     loginapp2route = Image.open(ruta_imagen2)
