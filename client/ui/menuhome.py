@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from PIL import Image,ImageTk ###Para insertar imagenes
+import os
 usuario = None
 def main_home(usuario,cerrar_sesion,rango):
     if not usuario:
@@ -28,12 +29,15 @@ def main_home(usuario,cerrar_sesion,rango):
     l1 = tk.Label(mainpage,text="LoginMaster Services:",fg="#000000",font="Arial 29 bold" ,bg="#FFFFFF")
     l1.pack(pady=30)
 
-    loginapp1route = Image.open("client/ui/img/loginotes.png")
+    carpeta_actual = os.path.dirname(__file__)
+    ruta_imagen = os.path.join(carpeta_actual,"img","loginotes.png")
+    loginapp1route = Image.open(ruta_imagen)
     loginapp1img = ImageTk.PhotoImage(loginapp1route)
     loginapp1 = tk.Label(mainpage,image=loginapp1img,cursor="hand2")
     loginapp1.pack(anchor="center")
 
-    loginapp2route = Image.open("client/ui/img/sappico.png")
+    ruta_imagen2 = os.path.join(carpeta_actual,"img","sappico.png")
+    loginapp2route = Image.open(ruta_imagen2)
     loginapp2img = ImageTk.PhotoImage(loginapp2route)
     loginapp2 = tk.Label(mainpage,image=loginapp2img,cursor="hand2")
     loginapp2.pack(anchor="center",pady=30)
@@ -44,4 +48,4 @@ def cerrar_home():
     mainhomew.destroy()
 
 if __name__ == "__main__":
-    main_home(None,None)
+    main_home(None,None,"normal")

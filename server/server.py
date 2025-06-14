@@ -16,6 +16,8 @@ urlservidor = "127.0.0.1"
 if not os.path.exists("logs"):
     os.mkdir("logs")
 
+if not os.path.exists("userfiles"):
+    os.mkdir("userfiles")
 
 ### Crea un log de eventos
 def crearlog(mensaje):
@@ -166,6 +168,8 @@ def registrar():
 
             conexion.commit()
 
+            if not os.path.exists(f"userfiles/{user_nick}"):
+                os.makedirs(f"userfiles/{user_nick}")
             crearlog(f"[+] El usuario: {user_nick} se registró con exito en la base de datos desde: {ip_usereg}.")
             return "Usuario registrado con exito",205
         
@@ -295,6 +299,9 @@ def auth():
         if conexion.is_connected():
             cursor.close()
             conexion.close()
+
+### Obtener informacion para el usuario
+
 
 if __name__ == "__main__":
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true":

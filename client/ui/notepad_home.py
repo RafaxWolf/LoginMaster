@@ -65,3 +65,5 @@ def notepad_home(usuario,abrir_home):
 # === INICIAR LOOP DE LA APP ===
     ventana.mainloop()
 
+if __name__ == "__main__":
+    notepad_home("simbio",None)
