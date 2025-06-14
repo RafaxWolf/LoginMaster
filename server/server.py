@@ -1,20 +1,29 @@
 ### Librerias
+import os, signal, bcrypt, importlib, threading, time, io, contextlib
+
 from flask import Flask,request,jsonify
 import mysql.connector
 from mysql.connector import IntegrityError,Error
 from datetime import datetime
-import os
-import bcrypt
-import importlib
-import threading
-import time
-import io
-import contextlib
 
-### Verifica si existe la carpeta logs, si no, la crea
+from prompt_toolkit import PromptSession
+from prompt_toolkit.patch_stdout import patch_stdout
+
+#* -------------------------------------------------------------------------------------------------------
+#* |                                               FOLDERS                                               |
+#* -------------------------------------------------------------------------------------------------------
+
+### Carpetas del servidor
+commands_dir = os.path.join(os.path.dirname(__file__), 'commands')
+logs_dir = os.path.join(os.path.dirname(__file__), 'logs')
+
+###! Verifica que el directorio de logs exista, si no, lo crea
 if not os.path.exists("logs"):
     os.mkdir("logs")
 
+#* -------------------------------------------------------------------------------------------------------
+#* |                                                 LOGS                                                |
+#* -------------------------------------------------------------------------------------------------------
 
 ### Crea un log de eventos
 def crearlog(mensaje):
@@ -31,33 +40,8 @@ def crearlog(mensaje):
     with open(f"logs/log-{fechalog}.log", "a") as writelog: ### a == append
         writelog.write(f"[{fechahoralog}]: {mensaje}\n")
 
-app = Flask(__name__)
-
-### Configuración de la base de datos
-##!     Hay que ponerlo con dotenv para que no sea tan en plano xD
-db_config = {
-    "user":"simbio",
-    "password":"simbionte123",
-    "host":"0.0.0.0",
-    "database":"login_db"
-}
-
-commands_dir = os.path.join(os.path.dirname(__file__), 'commands')
-
-### Conexión a la base de datos
-def conectar_base():
-    try:
-        conn = mysql.connector.connect(**db_config)
-        return conn
-    except mysql.connector.Error as err:
-        crearlog(f"No se pudo conectar a la base de datos, error {err}")
-        print(f"no se pudo conectar {err}")
-        return None
-
-
-###                      Cargador de comandos
+### Cargador de comandos
 def load_commands():
-    time.sleep(1)  # Espera un segundo para asegurar que el servidor esté listo
     print("[+] Cargando comandos...")
     commands = {}
     if os.path.exists(commands_dir): # Verifica si el directorio 'commands' existe
@@ -80,65 +64,100 @@ def load_commands():
         print("[+] Directorio 'commands' creado.")
         print("[+] Ahora puedes agregar comandos personalizados en el directorio 'commands'\n")
 
-###                         Consola del servidor
+### Consola del servidor
 def server_cli():
     time.sleep(1)  # Espera un segundo para asegurar que el servidor esté listo
     commands = load_commands() # Carga los comandos desde el directorio 'commands'
-    print("[+] Console initialized, type '/help' for commands. [+]\n")
-    while True:
-        cmd = input(">> ").strip()
-        if cmd.startswith("/"):
-            parts = cmd[1:].split()
-            if not parts:
-                continue
+    #richConsole.
+    print("[+] Server Console Ready, type '/help' for commands.")
+    session = PromptSession()  # Crea una sesión de prompt para la consola
 
-            command = parts[0]
-            args = parts[1:]
+    with patch_stdout():
+        while True:
+            try:
+                cmd = session.prompt(">> ")
+                if cmd.startswith("/"):
+                    parts = cmd[1:].split()
+                    if not parts:
+                        continue
 
-            ### Manejo de comandos
-            if command == "help": # Comando para mostrar la ayuda
-                print("[+] Comandos Disponibles:\n")
-                print("/help - Show this help message")
-                print("/clear - Clear the console")
-                try:
-                    for c, info in commands.items():
-                        print(f"/{c} - {info['description']}")
-                except Exception as e:
+                    command = parts[0]
+                    args = parts[1:]
+
+                    ### Manejo de comandos
+                    if command == "help": # Comando para mostrar la ayuda
+                        print("[+] Comandos Disponibles:\n")
+                        print("/help - Show this help message")
+                        print("/clear - Clear the console")
+                        try:
+                            for c, info in commands.items():
+                                print(f"/{c} - {info['description']}")
+                        except Exception as e:
+                            continue
+                        continue
+                    elif command in commands: # Verifica si el comando ejecutado existe en el diccionario de comandos
+                        try:
+                            buffer = io.StringIO() # Crea un buffer para capturar la salida del comando
+                            with contextlib.redirect_stdout(buffer): # Redirige la salida estándar al buffer
+                                commands[command]['run'](*args)
+                            output = buffer.getvalue() # Obtiene el valor del buffer
+                            print(output) # Imprime el valor del buffer en la consola
+
+                            crearlog(f"Comando ejecutado: {command} con argumentos: {args}")
+                            crearlog(output)
+                        except Exception as e: # Si ocurre un error al ejecutar el comando, muestra un mensaje de error
+                            crearlog(f"[!] Error al ejecutar el comando {command}: {e}")
+                            print(f"[!] Error al ejecutar el comando {command}: {e}")
+                    else: # Si el comando no existe, muestra un mensaje de error
+                        crearlog(f"[!] Comando desconocido: {command}")
+                        print(f"[!] Comando desconocido: {command} - Use '/help' para ver los comandos disponibles.")
+                elif cmd == "clear" or cmd == "cls":
+                    os.system('cls' if os.name == 'nt' else 'clear')
                     continue
-                continue
-            elif command == "clear": # Comando para limpiar la consola
-                os.system('cls' if os.name == 'nt' else 'clear')
-                continue
-            elif command in commands: # Verifica si el comando ejecutado existe en el diccionario de comandos
-                try:
-                    buffer = io.StringIO() # Crea un buffer para capturar la salida del comando
-                    with contextlib.redirect_stdout(buffer): # Redirige la salida estándar al buffer
-                        commands[command]['run'](*args)
-                    output = buffer.getvalue() # Obtiene el valor del buffer
-                    print(output) # Imprime el valor del buffer en la consola
+                elif cmd == "":
+                    continue
+                else:
+                    print("[!] Error:\nEl prefix de los comandos es: '/'\nPor favor, usa el prefix para ejecutar los comandos.\n")
+                    continue
 
-                    crearlog(f"Comando ejecutado: {command} con argumentos: {args}")
-                    crearlog(output)
-                except Exception as e: # Si ocurre un error al ejecutar el comando, muestra un mensaje de error
-                    crearlog(f"[!] Error al ejecutar el comando {command}: {e}")
-                    print(f"[!] Error al ejecutar el comando {command}: {e}")
-            else: # Si el comando no existe, muestra un mensaje de error
-                crearlog(f"[!] Comando desconocido: {command}")
-                print(f"[!] Comando desconocido: {command} - Use '/help' para ver los comandos disponibles.")
-        elif cmd == "clear" or cmd == "cls":
-            os.system('cls' if os.name == 'nt' else 'clear')
-            continue
-        elif cmd == "":
-            continue
-        else:
-            print("[!] Error:\nEl prefix de los comandos es: '/'\nPor favor, usa el prefix para ejecutar los comandos.\n")
-            continue
+            except (KeyboardInterrupt, EOFError):
+                print("[!] Consola cerrada por el usuario!\n[!] Cerrando servidor...")
+                time.sleep(0.2)
+                os.kill(os.getpid(), signal.SIGINT)  # Termina el proceso actual
+                break
 
-# -------------------------------------------------------------------------------------------------------
-# |                                               ENDPONTS                                              |
-# -------------------------------------------------------------------------------------------------------
+#* -------------------------------------------------------------------------------------------------------
+#* |                                            APP / DATABASE                                           |
+#* -------------------------------------------------------------------------------------------------------
 
-### Registrar un usuario
+
+app = Flask(__name__)
+
+### Configuración de la base de datos
+## TODO: Hay que ponerlo con dotenv o con un JSON para que no sea tan directo XD.
+db_config = {
+    "user":"simbio",
+    "password":"simbionte123",
+    "host":"0.0.0.0",
+    "database":"login_db"
+}
+
+
+###! Conexión a la base de datos
+def conectar_base():
+    try:
+        conn = mysql.connector.connect(**db_config)
+        return conn
+    except mysql.connector.Error as err:
+        crearlog(f"No se pudo conectar a la base de datos, error {err}")
+        print(f"no se pudo conectar {err}")
+        return None
+
+#* -------------------------------------------------------------------------------------------------------
+#* |                                               ENDPONTS                                              |
+#* -------------------------------------------------------------------------------------------------------
+
+###? Registrar un usuario
 @app.route("/registrar",methods=["POST","GET"])
 def registrar():
     if request.method == "POST":
@@ -187,74 +206,59 @@ def registrar():
         crearlog(f"La dirección: {request.remote_addr} no pudo conectarse (METODO GET)")
         return "CONEXION HORRIBLE",400
 
-### Verificar si un usuario ya existe
-@app.route("/verificar_user",methods=["GET"])
-def verificar_user():
+###? Verificar si un usuario y/o un correo ya existe
+@app.route("/verify", methods=["GET"])
+def verificar():
     user = request.args.get("user")
-    if not user:
-        crearlog("[!] Usuario no proporcionado para verificar")
-        return "Usuario no proporcionado",400
-    
-    conexion = conectar_base()
-    if conexion is None:
-        crearlog("[!] Error al conectar a la base de datos para verificar usuario")
-        return "Error al conectar con la base de datos",500
-    
-    cursor = conexion.cursor()
-    try:
-        query_sql = "SELECT username FROM users WHERE username = %s"
-        cursor.execute(query_sql, (user,))
-        resultado = cursor.fetchone()
-
-        if resultado:
-            crearlog(f"[!] Verificacion: El usuario {user} ya existe en la base de datos")
-            return jsonify({"existe": True}), 200
-        else:
-            crearlog(f"[+] Verificacion: El usuario {user} no existe en la base de datos")
-            return jsonify({"existe": False}), 200
-
-    except Error as e:
-        crearlog(f"[!] Error al verificar el usuario: {e}")
-        return f"Error al verificar el usuario: {e}",500
-    finally:
-        if conexion.is_connected():
-            cursor.close()
-            conexion.close()
-
-@app.route("/verificar_mail",methods=["GET"])
-def verificar_mail():
     mail = request.args.get("mail")
-    if not mail:
-        crearlog("[!] Correo no proporcionado para verificar")
-        return "Correo no proporcionado",400
-    
+
+    if not user and not mail:
+        crearlog("[!] No se proporcionó ni usuario ni correo para verificar")
+        return "Se debe proporcionar 'user' o 'mail'", 400
+
     conexion = conectar_base()
     if conexion is None:
-        crearlog("[!] Error al conectar a la base de datos para verificar usuario")
-        return "Error al conectar con la base de datos",500
-    
-    cursor = conexion.cursor()
-    try:
-        query_sql = "SELECT correo FROM users WHERE correo = %s"
-        cursor.execute(query_sql, (mail,))
-        resultado = cursor.fetchone()
+        crearlog("[!] Error al conectar a la base de datos para verificar")
+        return "Error al conectar con la base de datos", 500
 
-        if resultado:
-            crearlog(f"[!] Verificacion: El correo {mail} ya existe en la base de datos")
-            return jsonify({"existe": True}), 200
-        else:
-            crearlog(f"[+] Verificacion: El correo {mail} no existe en la base de datos")
-            return jsonify({"existe": False}), 200
+    cursor = conexion.cursor()
+    respuesta = {}
+
+    try:
+        if user:
+            cursor.execute("SELECT username FROM users WHERE username = %s", (user,))
+            resultado_user = cursor.fetchone()
+            existe_user = bool(resultado_user)
+            respuesta["user"] = existe_user
+            if existe_user:
+                crearlog(f"[!] El usuario '{user}' ya existe en la base de datos")
+            else:
+                crearlog(f"[+] El usuario '{user}' no existe en la base de datos")
+
+        if mail:
+            cursor.execute("SELECT correo FROM users WHERE correo = %s", (mail,))
+            resultado_mail = cursor.fetchone()
+            existe_mail = bool(resultado_mail)
+            respuesta["mail"] = existe_mail
+            if existe_mail:
+                crearlog(f"[!] El correo '{mail}' ya existe en la base de datos")
+            else:
+                crearlog(f"[+] El correo '{mail}' no existe en la base de datos")
+
+        return jsonify(respuesta), 200
 
     except Error as e:
-        crearlog(f"[!] Error al verificar el correo: {e}")
-        return f"Error al verificar el correo: {e}",500
+        crearlog(f"[!] Error al verificar: {e}")
+        return f"Error al verificar: {e}", 500
+
     finally:
         if conexion.is_connected():
             cursor.close()
             conexion.close()
 
-### Iniciar sesion de un usuario
+
+
+###? Loggear un usuario
 @app.route("/auth",methods=["POST"])
 def auth():
     data = request.json
@@ -268,9 +272,14 @@ def auth():
     
     cursor = conexion.cursor()
     try:
-        query_sql = "SELECT username FROM users WHERE username = %s"
-        cursor.execute(query_sql,(username,))
+        login_query_sql = "SELECT passwd FROM users WHERE username = %s"
+        cursor.execute(login_query_sql,(username,))
         resultado = cursor.fetchone()
+
+        rank_query_sql = "SELECT user_type FROM users WHERE username = %s"
+        cursor.execute(rank_query_sql,(username,))
+        user_rank = cursor.fetchone()
+
 
         if resultado is None:
             return "El usuario no existe",404
@@ -278,9 +287,9 @@ def auth():
         passwd_db = resultado[0].encode()
 
         if bcrypt.checkpw(password.encode(), passwd_db):
-            crearlog(f"Inicio de sesión exitoso: {username} desde: {ip}")
-            print(f"Inicio de sesión exitoso: {username} desde: {ip}")
-            return f"Inicio de sesión exitoso: {username} desde: {ip}",200
+            crearlog(f"[+] Inicio de sesión exitoso: {username} | {user_rank[0]} desde: {ip}")
+            print(f"[+] Inicio de sesión exitoso: {username} | {user_rank[0]} desde: {ip}")
+            return f"Inicio de sesión exitoso: {username}, desde: {ip}",200
         else:
             crearlog(f"El usuario: {username} desde: {ip} ingreso mal la contraseña")
             print(f"El usuario: {username} desde: {ip} ingreso mal la contraseña")

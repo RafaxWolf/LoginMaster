@@ -10,9 +10,9 @@ import bcrypt
 urlregistrar = "http://52.71.116.141:5000/registrar"
 
 ### Funcion para abrir el home
-def abrir_home(usuario):
+def abrir_home(usuario,rango):
     cerrar_login()
-    main_home(usuario)
+    main_home(usuario,rango)
 
 # -------------------------------------------------------------------------------------------------------
 # |                                              REGISTER                                               |
@@ -59,23 +59,21 @@ def comprobardatos(usuario,correo,passwd,conpasswd): ### Comprueba si los datos 
                 return bcrypt.hashpw(password.encode(), salt).decode()
 
             if solicitud.status_code == 200:
-                # Verificar si el correo ya existe en la base de datos
-                # Si no existe el endpoint /verificar_mail en el servidor, esta verificación no funcionará.
-                # Debes implementar un endpoint en el servidor que permita verificar si un correo ya está registrado.
-                # Mientras tanto, este código intentará hacer la verificación y mostrará un error si el endpoint no existe.
-                verificar_user_url = f"http://52.71.166.141:5000/verificar_user?user={usuario}"
-                verificar_mail_url = f"http://52.71.116.141:5000/verificar_mail?mail={correo}"
+                # Verificar si el usuario y/o correo ya existen en la base de datos
+                verificar_url = f"http://52.71.166.141:5000/verify?user={usuario}&mail={correo}"
+
                 try:
-                    respuesta_user = requests.get(verificar_user_url)
-                    if respuesta_user.status_code == 200 and respuesta_user.json().get("existe"):
-                        messagebox.showerror(title="Error", message="El usuario ya está registrado.")
-                        return
-                    respuesta_mail = requests.get(verificar_mail_url)
-                    if respuesta_mail.status_code == 200 and respuesta_mail.json().get("existe"):
-                        messagebox.showerror(title="Error", message="El correo ya está registrado.\nPrueba con otro.")
-                        return
+                    respuesta = requests.get(verificar_url)
+                    if respuesta.status_code == 200:
+                        datos = respuesta.json()
+                        if datos.get("user"):
+                            messagebox.showerror(title="Error", message="El usuario ya está registrado.")
+                            return
+                        if datos.get("mail"):
+                            messagebox.showerror(title="Error", message="El correo ya está registrado.\nPrueba con otro.")
+                            return
                 except requests.exceptions.RequestException:
-                    messagebox.showerror(title="Error", message="No se pudo verificar el correo.\nPor favor, intenta más tarde.")
+                    messagebox.showerror(title="Error", message="No se pudo verificar la información.\nPor favor, intenta más tarde.")
                     return
 
                 cuenta = {
@@ -107,9 +105,9 @@ def comprobardatos(usuario,correo,passwd,conpasswd): ### Comprueba si los datos 
         except requests.exceptions.RequestException as err:
             messagebox.showerror(title="Error",message=f"Error critico: {err}")
 
-# -------------------------------------------------------------------------------------------------------
-# |                                                LOGIN                                                |
-# -------------------------------------------------------------------------------------------------------
+#* -------------------------------------------------------------------------------------------------------
+#* |                                                LOGIN                                                |
+#* -------------------------------------------------------------------------------------------------------
 
 ### Verifica si los campos de login son correctos
 def comprobar_login(usuario,passwd):
@@ -140,8 +138,9 @@ def comprobar_login(usuario,passwd):
 
             ### Si es 200 inicia la sesion
             if solicitudlogin.status_code == 200:
+                rango = solicitudlogin.text
                 messagebox.showinfo(title="Exito",message="Iniciaste sesión!")
-                abrir_home(usuario)
+                abrir_home(usuario,rango)
 
             ### Si es 401, contraseña incorrecta
             elif solicitudlogin.status_code == 401:
