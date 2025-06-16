@@ -6,7 +6,7 @@ import requests
 import bcrypt
 
 ### URL del servidor
-urlservidor = "http://51.71.116.141:5000" ### "http://...:5000"
+urlservidor = "http://52.71.116.141:5000" ### "http://...:5000"
 urlregistrar = f"{urlservidor}/registrar"
 
 ### Funcion para abrir el home
