@@ -1,14 +1,15 @@
-import socket
-
+# Necessary
 name = "iptrace"
-description = "Find the IP address of a given domain or hostname"
+description = "<ip_address> - Find the IP address of a given domain or hostname."
 
+# Command
 def run(*args):
     if not args:
-        return print("Uso: /iptrace <dominio_o_ip>")
+        print("[!] Syntax Error: Argumento Faltante.")
+        print(f"[+] Uso:\n\t /{name} {description}")
+        return
     
     ip = args[0]
-
-
-    print(f"[!] Buscando datos de la direccion IP: {ip}")
+    print(f"[!] Buscando datos de la direccion IP: {ip} [!]")
+    
     

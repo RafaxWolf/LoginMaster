@@ -5,9 +5,9 @@ from tkinter import messagebox
 import requests
 import bcrypt
 
-### URL del servidor de registro
-### Cambiar esta URL por la de tu servidor si es necesario
-urlregistrar = "http://52.71.116.141:5000/registrar"
+### URL del servidor
+urlservidor = "http://51.71.116.141:5000" ### "http://...:5000"
+urlregistrar = f"{urlservidor}/registrar"
 
 ### Funcion para abrir el home
 def abrir_home(usuario,rango):
@@ -60,7 +60,7 @@ def comprobardatos(usuario,correo,passwd,conpasswd): ### Comprueba si los datos 
 
             if solicitud.status_code == 200:
                 # Verificar si el usuario y/o correo ya existen en la base de datos
-                verificar_url = f"http://52.71.166.141:5000/verify?user={usuario}&mail={correo}"
+                verificar_url = f"{urlservidor}/verify?user={usuario}&mail={correo}"
 
                 try:
                     respuesta = requests.get(verificar_url)
@@ -127,7 +127,7 @@ def comprobar_login(usuario,passwd):
     else:
 
         ### URL de inicio de sesión
-        urlinicio = "http://52.71.116.141:5000/auth"
+        urlinicio = f"{urlservidor}/auth"
         data = {
             "username":usuario,
             "password":passwd

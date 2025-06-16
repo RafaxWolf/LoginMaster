@@ -1,4 +1,6 @@
-### Librerias
+###                         ARCHIVO PRINCIPAL DEL SERVIDOR
+
+#* Librerias
 import os, signal, bcrypt, importlib, threading, time, io, contextlib
 
 from flask import Flask,request,jsonify
@@ -9,45 +11,44 @@ from datetime import datetime
 from prompt_toolkit import PromptSession
 from prompt_toolkit.patch_stdout import patch_stdout
 
-#* -------------------------------------------------------------------------------------------------------
-#* |                                               FOLDERS                                               |
-#* -------------------------------------------------------------------------------------------------------
+#* ╔═════════════════════════════════════════════════════════════════════════════════════════════════════╗
+#* ║                                             / FOLDERS /                                             ║
+#* ╚═════════════════════════════════════════════════════════════════════════════════════════════════════╝
 
-### Carpetas del servidor
+###* Carpetas del servidor
 commands_dir = os.path.join(os.path.dirname(__file__), 'commands')
 logs_dir = os.path.join(os.path.dirname(__file__), 'logs')
+## Aqui se pueden agregar las carpetas para las distintas funciones del servidor
+## TODO: Posiblemente meter el "Commands Handler" a una carpeta "Functions" en un futuro pero eso seria mucha pega
 
-###! Verifica que el directorio de logs exista, si no, lo crea
+#! Verifica que el directorio de logs exista, si no, lo crea
 if not os.path.exists("logs"):
     os.mkdir("logs")
 
-#* -------------------------------------------------------------------------------------------------------
-#* |                                                 LOGS                                                |
-#* -------------------------------------------------------------------------------------------------------
+#* ╔═════════════════════════════════════════════════════════════════════════════════════════════════════╗
+#* ║                                             [ LOGS ]                                                ║
+#* ╚═════════════════════════════════════════════════════════════════════════════════════════════════════╝
 
-### Crea un log de eventos
+###* Crea un .log de eventos que ocurran en el servidor
 def crearlog(mensaje):
 
+    # Fecha y hora del Log
     fechahoralog = datetime.now()
-
-    # Deprecated:
-    #fechahoralogformat = fechahoralog.strftime("%H:%M:%S_%d/%m/%y")
-
-    # New format:
     fechalog = fechahoralog.strftime("%d_%m_%y")
 
-    ### Crea/Edita el archivo de log actual del dia
+    # Crea/Edita el archivo de log actual del dia
     with open(f"logs/log-{fechalog}.log", "a") as writelog: ### a == append
         writelog.write(f"[{fechahoralog}]: {mensaje}\n")
 
-### Cargador de comandos
+
+###* Commands Loader
 def load_commands():
-    print("[+] Cargando comandos...")
+    print("[/] Loading: Cargando comandos...")
     commands = {}
-    if os.path.exists(commands_dir): # Verifica si el directorio 'commands' existe
+    if os.path.exists(commands_dir): #! Verifica que el directorio '/commands/' exista
         for file in os.listdir(commands_dir):
-            if file.endswith(".py"):
-                command_name = file[:-3] # Elimina la extensión .py
+            if file.endswith(".py"): # Detecta los archivos .py
+                command_name = file[:-3] # Elimina la extensión .py para hacer la importacion
                 command = importlib.import_module(f"commands.{command_name}")
 
                 if hasattr(command, 'name') and hasattr(command, 'run'):
@@ -55,69 +56,157 @@ def load_commands():
                         'description': getattr(command, 'description', 'No description provided'), # Obtiene la descripción del comando, si no existe, asigna un valor por defecto
                         'run': command.run # Asigna la función run del comando
                     }
+                    print(f"[+] {command_name} - Cargado con exito")
+                else:
+                    print(f"[!] {command_name} - Error al cargar.")
         return commands
         
-    
-    else: # Si el directorio 'commands' no existe, lo crea
-        print("[!] El directorio 'commands' no existe, creando el directorio...")
+    else: #! Si el directorio '/commands/' no existe, lo crea
+        print("[!] Warning: El directorio '/commands/' no existe, creando el directorio...")
         os.mkdir(commands_dir)
-        print("[+] Directorio 'commands' creado.")
-        print("[+] Ahora puedes agregar comandos personalizados en el directorio 'commands'\n")
 
-### Consola del servidor
+        print("[+] Info: Directorio '/commands/' creado.")
+        print("[+] Tip: Ahora puedes agregar comandos personalizados en el directorio '/commands/'\n")
+
+
+###* Server Console (CLI)
 def server_cli():
-    time.sleep(1)  # Espera un segundo para asegurar que el servidor esté listo
-    commands = load_commands() # Carga los comandos desde el directorio 'commands'
-    #richConsole.
+    time.sleep(1)  # Tiempo de espera para que no hayan errores
+    commands = load_commands() # Carga los comandos desde el directorio '/commands/'
     print("[+] Server Console Ready, type '/help' for commands.")
-    session = PromptSession()  # Crea una sesión de prompt para la consola
+    session = PromptSession()  # Consola fixeada
 
-    with patch_stdout():
+    with patch_stdout(): # Parchea el STOUT para que no rompa la consola (No funciona con los registros de Flask.)
         while True:
             try:
-                cmd = session.prompt(">> ")
-                if cmd.startswith("/"):
+                cmd = session.prompt(">> ") # Prompt
+                # --------------------------------------------------------------------------- #
+                #                              Comandos sin Prefix                            #
+                # --------------------------------------------------------------------------- #
+
+                # Si no se escribe nada y se pulsa Enter no hara nada
+                if cmd == "":
+                        continue
+                
+                # Si se escribe "clear" o "cls" sin el prefix igualmente limpia la consola
+                elif cmd == "clear" or cmd == "cls":
+                    os.system('cls' if os.name == 'nt' else 'clear')
+                    continue
+
+                # --------------------------------------------------------------------------- #
+                #                              Comandos con Prefix                            #
+                # --------------------------------------------------------------------------- #
+
+                ###* Commands Prefix
+                elif cmd.startswith("/"):
                     parts = cmd[1:].split()
                     if not parts:
                         continue
 
-                    command = parts[0]
-                    args = parts[1:]
+                    command = parts[0] ## Comando
+                    args = parts[1:]   ## Argumentos
 
-                    ### Manejo de comandos
-                    if command == "help": # Comando para mostrar la ayuda
-                        print("[+] Comandos Disponibles:\n")
-                        print("/help - Show this help message")
-                        print("/clear - Clear the console")
+                    ###* Commands Handler
+                    # Comando /Help
+                    if command == "help":
+                        print("\n[+] Comandos Disponibles:")
+                        # Comandos Por defecto (incluidos en el Handler)
+                        print("\t/help - Show this help message")
+                        print("\t/clear - Clear the console")
+                        print("\t/logs list - Show the logs | /logs <log_name> - Show a specific log")
+                        # Comandos Customs (Carpeta "/commands/")
                         try:
+                            # Obtiene el noombre del comando y su Descripcion para el Help
                             for c, info in commands.items():
-                                print(f"/{c} - {info['description']}")
-                        except Exception as e:
+                                print(f"\t/{c} - {info['description']}")
+                            print() # Espacio vacio al final
+                        except Exception as e: ## Si no hay comandos custom
+                            print() # Espacio vacio al final
                             continue
                         continue
-                    elif command in commands: # Verifica si el comando ejecutado existe en el diccionario de comandos
-                        try:
-                            buffer = io.StringIO() # Crea un buffer para capturar la salida del comando
-                            with contextlib.redirect_stdout(buffer): # Redirige la salida estándar al buffer
-                                commands[command]['run'](*args)
-                            output = buffer.getvalue() # Obtiene el valor del buffer
-                            print(output) # Imprime el valor del buffer en la consola
+                    # Comando /clear | /cls
+                    elif command == "clear" or command == "cls":
+                        os.system('cls' if os.name == 'nt' else 'clear')
+                        continue
+                    # Comando /logs
+                    elif command == "logs":
+                        if not args:
+                            print("[!] Error: ")
+                            print("[+] Uso:\n\t/logs list - para listar los logs en la carpeta '/logs'\n\t/logs log-<fecha_del_log> - para ver un log específico")
+                            continue
 
-                            crearlog(f"Comando ejecutado: {command} con argumentos: {args}")
-                            crearlog(output)
+                        if args[0] == "list":
+                            print("[+] Listando los logs disponibles...")
+                            try:
+                                # Verifica si hay logs en el directorio
+                                log_files = os.listdir(logs_dir)
+                                if not log_files:
+                                    print("[!] No hay logs disponibles.")
+                                
+                                else:
+                                    # Lista los archivos de log en el directorio
+                                    print("[+] Logs disponibles:")
+                                    for log_file in log_files:
+                                        print(f"- {log_file}")
+
+                            except Exception as e:
+                                crearlog(f"[!] Error al listar los logs: {e}")
+                                print(f"[!] Error al listar los logs: {e}")
+                            continue
+
+                        elif len(args) == 1:
+                            log_name = args[0]
+                            if log_name.startswith("log-"):
+                                log_path = os.path.join(logs_dir, log_name)
+                                if not os.path.exists(log_path):
+                                    print(f"[!] El log '{log_name}' no existe.")
+                                    continue
+                            else:
+                                print("[!] Uso:\n\t/logs list - para listar los logs en la carpeta '/logs'\n\t/logs log-<fecha_del_log> - para ver un log específico")
+                                continue
+
+                            try:
+                                with open(log_path, 'r') as log_file:
+                                    print(f"\n\t[+] Contenido del log '{log_name}':\n")
+                                    print(log_file.read())
+                            except Exception as e:
+                                print(f"[!] Error al leer el log '{log_name}': {e}")
+                            except Exception as e:
+                                print(f"[!] Error al leer los logs: {e}")
+
+                        else:
+                            print("[!] Uso:\n\t/logs list - para listar los logs en la carpeta '/logs'\n\t/logs <nombre_del_log> - para ver un log específico")
+                        continue
+                    # Comando /exit
+                    elif command == "exit":
+                        print("[!] Warning: Comando '/exit' Ejeccutado!\n[!] Warning: Cerrando el servidor...")
+                        time.sleep(0.2)
+                        os.kill(os.getpid(), signal.SIGINT)
+                        break
+                    # Custom Commands
+                    elif command in commands: # Si el comando es uno Custom
+                        try:
+                            ## Detector de output (Para poder guerdarlo en un .log)
+                            buffer = io.StringIO() # Crea un buffer para capturar la salida del comando
+                            with contextlib.redirect_stdout(buffer): # Redirige la salida al buffer
+                                commands[command]['run'](*args)
+                            output = buffer.getvalue()
+                            print(output) # Imprime el output del comando
+                            crearlog(f"Comando ejecutado: {command} con argumentos: {args}") # Registra como seejecuto el comando
+                            crearlog(output) # Registra el output del comando
+                        
                         except Exception as e: # Si ocurre un error al ejecutar el comando, muestra un mensaje de error
-                            crearlog(f"[!] Error al ejecutar el comando {command}: {e}")
-                            print(f"[!] Error al ejecutar el comando {command}: {e}")
+                            crearlog(f"[!] Error al ejecutar el comando {command}:\n{e}")
+                            print(f"[!] Error al ejecutar el comando {command}:\n{e}")
+                    
                     else: # Si el comando no existe, muestra un mensaje de error
                         crearlog(f"[!] Comando desconocido: {command}")
                         print(f"[!] Comando desconocido: {command} - Use '/help' para ver los comandos disponibles.")
-                elif cmd == "clear" or cmd == "cls":
-                    os.system('cls' if os.name == 'nt' else 'clear')
-                    continue
-                elif cmd == "":
-                    continue
+                        continue
+                # Si no es un comando (No Prefix/Default/Custom) muestra mensaje de error
                 else:
                     print("[!] Error:\nEl prefix de los comandos es: '/'\nPor favor, usa el prefix para ejecutar los comandos.\n")
+                    print("[?] Tip: Usa /help para ver la lista de los comandos disponibles.")
                     continue
 
             except (KeyboardInterrupt, EOFError):
@@ -126,22 +215,22 @@ def server_cli():
                 os.kill(os.getpid(), signal.SIGINT)  # Termina el proceso actual
                 break
 
-#* -------------------------------------------------------------------------------------------------------
-#* |                                            APP / DATABASE                                           |
-#* -------------------------------------------------------------------------------------------------------
+#* ╔═════════════════════════════════════════════════════════════════════════════════════════════════════╗
+#* ║                                          < APP / DATABASE >                                         ║
+#* ╚═════════════════════════════════════════════════════════════════════════════════════════════════════╝
 
-
+### Define la aplicación Flask
 app = Flask(__name__)
 
 ### Configuración de la base de datos
 ## TODO: Hay que ponerlo con dotenv o con un JSON para que no sea tan directo XD.
+
 db_config = {
     "user":"simbio",
     "password":"simbionte123",
     "host":"0.0.0.0",
     "database":"login_db"
 }
-
 
 ###! Conexión a la base de datos
 def conectar_base():
@@ -153,9 +242,10 @@ def conectar_base():
         print(f"no se pudo conectar {err}")
         return None
 
-#* -------------------------------------------------------------------------------------------------------
-#* |                                               ENDPONTS                                              |
-#* -------------------------------------------------------------------------------------------------------
+
+#* ╔═════════════════════════════════════════════════════════════════════════════════════════════════════╗
+#* ║                                             ( ENDPONTS )                                            ║
+#* ╚═════════════════════════════════════════════════════════════════════════════════════════════════════╝
 
 ###? Registrar un usuario
 @app.route("/registrar",methods=["POST","GET"])
@@ -206,6 +296,8 @@ def registrar():
         crearlog(f"La dirección: {request.remote_addr} no pudo conectarse (METODO GET)")
         return "CONEXION HORRIBLE",400
 
+#* -------------------------------------------------------------------------------------------------------
+
 ###? Verificar si un usuario y/o un correo ya existe
 @app.route("/verify", methods=["GET"])
 def verificar():
@@ -232,8 +324,10 @@ def verificar():
             respuesta["user"] = existe_user
             if existe_user:
                 crearlog(f"[!] El usuario '{user}' ya existe en la base de datos")
+                print(f"[!] El usuario '{user}' ya existe en la base de datos")
             else:
                 crearlog(f"[+] El usuario '{user}' no existe en la base de datos")
+                print(f"[+] El usuario '{user}' no existe en la base de datos")
 
         if mail:
             cursor.execute("SELECT correo FROM users WHERE correo = %s", (mail,))
@@ -242,13 +336,16 @@ def verificar():
             respuesta["mail"] = existe_mail
             if existe_mail:
                 crearlog(f"[!] El correo '{mail}' ya existe en la base de datos")
+                print(f"[!] El correo '{mail}' ya existe en la base de datos")
             else:
                 crearlog(f"[+] El correo '{mail}' no existe en la base de datos")
+                print(f"[+] El correo '{mail}' no existe en la base de datos")
 
         return jsonify(respuesta), 200
 
     except Error as e:
         crearlog(f"[!] Error al verificar: {e}")
+        print(f"[!] Error al verificar: {e}")
         return f"Error al verificar: {e}", 500
 
     finally:
@@ -256,7 +353,7 @@ def verificar():
             cursor.close()
             conexion.close()
 
-
+#* -------------------------------------------------------------------------------------------------------
 
 ###? Loggear un usuario
 @app.route("/auth",methods=["POST"])
@@ -296,6 +393,7 @@ def auth():
             return f"Contraseña incorrecta",401
     except Error as r:
         crearlog(f"La dirección: {ip} tuvo un problema de MySQL para iniciar sesión como {username} error:{r}")
+        print(f"La dirección: {ip} tuvo un problema de MySQL para iniciar sesión como {username} error:{r}")
         return f"Error de SQL {r}",500
     
     finally:
@@ -303,9 +401,12 @@ def auth():
             cursor.close()
             conexion.close()
 
+#* ╔═════════════════════════════════════════════════════════════════════════════════════════════════════╗
+#* ║                                       > INICIO DEL SERVIDOR <                                       ║
+#* ╚═════════════════════════════════════════════════════════════════════════════════════════════════════╝
+
 if __name__ == "__main__":
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-        #crearlog("[+] Iniciando el servidor Flask...")
         console = threading.Thread(target=server_cli,daemon=True,args=())
         console.start()
 
