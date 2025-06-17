@@ -1,3 +1,4 @@
+# Librerias
 from ui.login_ui import loginscreen, cerrar_login
 from ui.register_ui import registerscreen, cerrar_register
 from ui.menuhome import main_home
@@ -5,8 +6,8 @@ from tkinter import messagebox
 import requests
 import bcrypt
 
-### URL del servidor
-urlservidor = "http://52.71.116.141:5000" ### "http://...:5000"
+### Configuración a la conexion del servidor
+urlservidor = "http://127.0.0.1:5000" ### "http://...:5000"
 urlregistrar = f"{urlservidor}/registrar"
 
 ### Funcion para abrir el home
@@ -14,9 +15,9 @@ def abrir_home(usuario,rango):
     cerrar_login()
     main_home(usuario,rango)
 
-# -------------------------------------------------------------------------------------------------------
-# |                                              REGISTER                                               |
-# -------------------------------------------------------------------------------------------------------
+# ╔═════════════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║                                              REGISTER                                               ║
+# ╚═════════════════════════════════════════════════════════════════════════════════════════════════════╝
 
 def comprobardatos(usuario,correo,passwd,conpasswd): ### Comprueba si los datos del registro se pueden mandar a la base de datos
     ### Si los campos estan vacios, muestra un mensaje de error
@@ -105,9 +106,9 @@ def comprobardatos(usuario,correo,passwd,conpasswd): ### Comprueba si los datos 
         except requests.exceptions.RequestException as err:
             messagebox.showerror(title="Error",message=f"Error critico: {err}")
 
-#* -------------------------------------------------------------------------------------------------------
-#* |                                                LOGIN                                                |
-#* -------------------------------------------------------------------------------------------------------
+#* ╔═════════════════════════════════════════════════════════════════════════════════════════════════════╗
+#* ║                                                LOGIN                                                ║
+#* ╚═════════════════════════════════════════════════════════════════════════════════════════════════════╝
 
 ### Verifica si los campos de login son correctos
 def comprobar_login(usuario,passwd):

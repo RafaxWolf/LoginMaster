@@ -25,6 +25,9 @@ logs_dir = os.path.join(os.path.dirname(__file__), 'logs')
 if not os.path.exists("logs"):
     os.mkdir("logs")
 
+serverip = "0.0.0.0"
+serverport = 5000
+
 #* ╔═════════════════════════════════════════════════════════════════════════════════════════════════════╗
 #* ║                                             [ LOGS ]                                                ║
 #* ╚═════════════════════════════════════════════════════════════════════════════════════════════════════╝
@@ -410,4 +413,4 @@ if __name__ == "__main__":
         console = threading.Thread(target=server_cli,daemon=True,args=())
         console.start()
 
-app.run(debug=True)
+app.run(host=serverip,port=serverport,debug=True)
