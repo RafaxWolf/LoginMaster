@@ -12,7 +12,7 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.patch_stdout import patch_stdout
 
 #* ╔═════════════════════════════════════════════════════════════════════════════════════════════════════╗
-#* ║                                             / FOLDERS /                                             ║
+#* ║                                             /  CONFIG /                                             ║
 #* ╚═════════════════════════════════════════════════════════════════════════════════════════════════════╝
 
 ###* Carpetas del servidor
@@ -20,13 +20,13 @@ commands_dir = os.path.join(os.path.dirname(__file__), 'commands')
 logs_dir = os.path.join(os.path.dirname(__file__), 'logs')
 ## Aqui se pueden agregar las carpetas para las distintas funciones del servidor
 ## TODO: Posiblemente meter el "Commands Handler" a una carpeta "Functions" en un futuro pero eso seria mucha pega
-
 #! Verifica que el directorio de logs exista, si no, lo crea
-if not os.path.exists("logs"):
-    os.mkdir("logs")
+if not os.path.exists(logs_dir):
+    os.makedirs(logs_dir)
 
-serverip = "0.0.0.0"
-serverport = 5000
+###* Configuración del servidor
+serverip = "0.0.0.0" # IP del servidor 
+serverport = 5000 # Puerto del servidor
 
 #* ╔═════════════════════════════════════════════════════════════════════════════════════════════════════╗
 #* ║                                             [ LOGS ]                                                ║
