@@ -6,7 +6,7 @@ from tkinter import messagebox
 import requests
 import bcrypt
 
-urlservidor = "http://127.0.0.1:5000" ###http://...:5000
+urlservidor = "http://192.168.253.130:5000" ###http://...:5000
 ### URL del servidor de registro
 ### Cambiar esta URL por la de tu servidor si es necesario
 urlregistrar = f"{urlservidor}/registrar"
@@ -22,6 +22,8 @@ def cerrar_sesion():
 def abrir_home(usuario,rango):
     cerrar_login()
     main_home(usuario,cerrar_sesion,rango,abrir_notepad_home)
+    solicitudpost = requests.post(urlregistrar,json=cuenta)
+
 
 
 def abrir_notepad_home(usuario):

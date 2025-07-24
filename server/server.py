@@ -11,7 +11,7 @@ import time
 import io
 import contextlib
 
-urlservidor = "127.0.0.1"
+urlservidor = "0.0.0.0"
 ### Verifica si existe la carpeta logs, si no, la crea
 if not os.path.exists("logs"):
     os.mkdir("logs")
@@ -39,9 +39,9 @@ app = Flask(__name__)
 ### Configuración de la base de datos
 ##!     Hay que ponerlo con dotenv para que no sea tan en plano xD
 db_config = {
-    "user":"root",
+    "user":"login",
     "password":"simbionte123",
-    "host":"127.0.0.1",
+    "host":"0.0.0.0",
     "database":"login_db"
 }
 
@@ -300,6 +300,23 @@ def auth():
             cursor.close()
             conexion.close()
 
+@app.route("/type_verify",methods=["POST","GET"])
+def type_verify():
+    if request.method == "POST":
+        datos = request.json
+        userrr = datos.get("usuario")
+        rangoss = datos.get("rank")
+        crearlog(f"desde {request.remote_addr} posteo == {userrr} de rango {rangoss}")
+        print(f"desde {request.remote_addr} posteo == {userrr} de rango {rangoss}")
+        return "buenisima",200
+    elif request.method == "GET":
+        crearlog(f"La dirección: {request.remote_addr} se conectó con exito (METODO GET)")
+        return "conexión exitosa!",200
+    else:
+        crearlog(f"La dirección: {request.remote_addr} no pudo conectarse (METODO GET)")
+        return "CONEXION HORRIBLE",400
+
+
 ### Obtener informacion para el usuario
 
 
@@ -309,4 +326,4 @@ if __name__ == "__main__":
         console = threading.Thread(target=server_cli,daemon=True,args=())
         console.start()
 
-app.run(host=urlservidor,port=5000,debug=True)
+app.run(host="0.0.0.0",port=5000,debug=True)
